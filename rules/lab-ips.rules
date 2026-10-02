@@ -1,0 +1,11 @@
+# Regras do lab. sid >= 1000000 = regras locais.
+# Fase IPS: regras em "drop" (bloqueiam).
+
+# Exercicio 2: acesso a /admin
+drop http any any -> any any (msg:"LAB acesso a /admin"; flow:to_server; http.uri; content:"/admin"; sid:1000001; rev:1;)
+
+# SQL injection simples (OR 1=1)
+drop http any any -> any any (msg:"LAB possivel SQLi (OR 1=1)"; flow:to_server; http.uri; content:"OR"; nocase; content:"1=1"; nocase; sid:1000002; rev:1;)
+
+# Port scan: 15 SYNs em 3s => UM alerta por origem
+drop tcp any any -> $HOME_NET any (msg:"LAB possivel port scan (SYN)"; flags:S; threshold:type both, track by_src, count 15, seconds 3; sid:1000003; rev:1;)

@@ -1,0 +1,34 @@
+# Lab IDS/IPS para iniciantes - Suricata + nmap + nginx
+# Rede interna: sem saida para a internet/rede da faculdade (alvo e atacante isolados).
+services:
+  vitima:
+    image: nginx:alpine
+    container_name: vitima
+    hostname: vitima
+    volumes:
+      - ./vitima/index.html:/usr/share/nginx/html/index.html:ro
+      - ./vitima/admin.html:/usr/share/nginx/html/admin/index.html:ro
+    networks: [labnet]
+
+  # O Suricata compartilha a rede da vitima: ve exatamente o que ela recebe.
+  ids:
+    build: ./ids
+    container_name: ids
+    network_mode: "service:vitima"
+    cap_add: [NET_ADMIN, NET_RAW, SYS_NICE]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["sleep infinity"]   # iniciamos o Suricata manualmente nos exercicios
+    volumes:
+      - ./rules:/etc/suricata/lab-rules
+      - ./logs:/var/log/suricata
+
+  atacante:
+    build: ./atacante
+    container_name: atacante
+    hostname: atacante
+    command: ["sleep", "infinity"]
+    networks: [labnet]
+
+networks:
+  labnet:
+    internal: true
